@@ -143,7 +143,12 @@ document.getElementById('createAdminBtn').addEventListener('click',()=>{const na
 document.getElementById('createSchoolBtn').addEventListener('click',()=>{const num=prompt('Номер школы:'); if(!num)return; const pass=prompt('Пароль:'); if(!pass)return; users["school_"+num]={password:pass,role:'school',displayName:'Школа №'+num,schoolNumber:num}; localStorage.setItem(LS_USERS,JSON.stringify(users)); alert('Создано');});
 if(currentUser){document.getElementById('loginPopup').style.display='none'; showMainUIAfterLogin();}
 </script>
+  
+<div class="school-name" style="position:fixed;bottom:10px;left:10px;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.2);font-size:0.9rem;color:#064420;z-index:1000;">
+  КГУ «Общеобразовательная школа №33 отдела образования г. Уральск Управления образования акимата Западно-Казахстанской области»
+</div>
 
 </body>
 </html>
+
 
