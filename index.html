@@ -7,8 +7,9 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#a8e6cf,#dcedc1);overflow:hidden}
-.header{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;position:relative}
-h1{font-size:3rem;color:#064420;padding:10px 30px;border-radius:20px;margin:0;background:rgba(255,255,255,0.9);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.header{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;position:relative}
+h1{font-size:2.5rem;color:#064420;padding:10px 30px;border-radius:20px;margin:0;background:rgba(255,255,255,0.9);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.school-name{font-size:1.5rem;color:#064420;padding:8px 16px;background:rgba(255,255,255,0.9);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
 .arrow-menu{cursor:pointer;background:rgba(255,255,255,0.9);padding:6px 10px;border-radius:12px;box-shadow:2px 2px 6px rgba(0,0,0,.2);position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:1002}
 .menu-items{position:absolute;top:60px;left:10px;background:rgba(255,255,255,0.95);padding:10px;border-radius:12px;box-shadow:2px 2px 10px rgba(0,0,0,.3);z-index:1000;display:none;width:260px}
 .menu-items button{display:block;width:100%;margin-bottom:6px;padding:10px;border-radius:12px;border:none;background:#064420;color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s}
@@ -47,9 +48,7 @@ label.small{font-size:0.85rem;color:#333}
 <div class="header">
   <div class="arrow-menu" id="menuArrow" title="Меню">☰</div>
   <h1>Расписание 1-11 классы</h1>
-  <div class="school-name" style="font-size:1rem;color:#064420;padding:6px 12px;background:rgba(255,255,255,0.9);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-    КГУ «Общеобразовательная школа №33 отдела образования г. Уральск Управления образования акимата Западно-Казахстанской области»
-  </div>  
+  <div class="school-name">КГУ «Общеобразовательная школа №33»</div>
   <div class="menu-items" id="menuItems" aria-hidden="true">
     <div id="authInfo" style="display:none"></div>
     <button id="saveBtn" class="hidden-prelogin btn">Сохранить</button>
@@ -97,7 +96,7 @@ label.small{font-size:0.85rem;color:#333}
 </div>
 
 <script>
-// === ТВОЙ JS КОД ОСТАЁТСЯ ТАКИМ ЖЕ, НО ВСЁ РАБОТАЕТ ===
+// === ВСЯ ЛОГИКА И ФУНКЦИОНАЛ ===
 const LS_SCHEDULE = "scheduleData_v1";
 const LS_VISIBLE = "visibleClasses_v1";
 const LS_BDAY = "birthdayData_v1";
@@ -121,6 +120,7 @@ function updateMenuVisibility(){const isLogged=!!currentUser; document.querySele
 function showMainUIAfterLogin(){document.getElementById('scheduleWrapper').style.display='block'; try{const b=localStorage.getItem(LS_BDAY); if(b){const o=JSON.parse(b); if(o && o.name) showBirthdayWidget(o.name,o.date,o.photo);}}catch(e){} try{if(currentUser){const userKey=currentUser.username; const userData=JSON.parse(localStorage.getItem("user_"+userKey)||"{}"); if(userData.schedule)scheduleData=userData.schedule; if(userData.visible)visibleClasses=userData.visible;}}catch(e){} updateMenuVisibility(); refreshVisibility(); updateSchedulePosition();}
 function updateClock(){const now=new Date();const h=String(now.getHours()).padStart(2,'0');const m=String(now.getMinutes()).padStart(2,'0');const s=String(now.getSeconds()).padStart(2,'0');document.getElementById('clock').textContent=`${h}:${m}:${s}`;document.getElementById('dateText').textContent=`${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()}`;}
 setInterval(updateClock,1000);updateClock();
+
 const container=document.getElementById('scheduleContainer');
 function createCard(cls){const card=document.createElement('div'); card.className='schedule-card'; card.dataset.cls=cls; let html=`<h3>${cls}</h3><table><thead><tr><th>#</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th></tr></thead><tbody>`; for(let r=0;r<8;r++){html+=`<tr><td>${r+1}</td>`;["Пн","Вт","Ср","Чт","Пт"].forEach(()=>{html+=`<td><select></select><input type="text" placeholder="кабинет"></td>`;});html+=`</tr>`;} html+=`</tbody></table>`; card.innerHTML=html; container.appendChild(card); ["Пн","Вт","Ср","Чт","Пт"].forEach((day,i)=>{scheduleData[cls][day].forEach((lesson,rowIndex)=>{const td=card.querySelectorAll('tbody tr')[rowIndex].children[i+1];const select=td.querySelector('select');const input=td.querySelector('input');subjects.forEach(s=>{const opt=document.createElement('option');opt.value=s;opt.textContent=s||'—';select.appendChild(opt);}); select.value=lesson.subject||''; input.value=lesson.room||''; select.addEventListener('change',()=>{lesson.subject=select.value; saveAll();}); input.addEventListener('input',()=>{lesson.room=input.value; saveAll();});});});}
 allClasses.forEach(createCard);
@@ -130,8 +130,12 @@ document.getElementById('nextBtn').addEventListener('click',()=>{const visibleNo
 document.getElementById('prevBtn').addEventListener('click',()=>{const visibleNodes=getVisibleNodes(); const pages=Math.max(Math.ceil(visibleNodes.length/2),1); pageIndex=(pageIndex-1+pages)%pages; updateSchedulePosition();});
 setInterval(()=>{if(autoScroll&&getVisibleNodes().length>2)document.getElementById('nextBtn').click();},5000);
 function refreshVisibility(){document.querySelectorAll('.schedule-card').forEach(card=>{card.style.display=visibleClasses.includes(card.dataset.cls)?'flex':'none';});updateSchedulePosition();}
+
 const menuArrow=document.getElementById('menuArrow'); const menuItems=document.getElementById('menuItems');
-menuArrow.addEventListener('click',()=>{if(!currentUser){document.getElementById('loginPopup').style.display='block';return;} menuItems.style.display=menuItems.style.display==='block'?'none':'block';});
+menuArrow.addEventListener('click',()=>{if(!currentUser){document.getElementById('loginPopup').style.displayПонял, я могу закончить тебе полный код с функционалом, не трогая твой дизайн, и с добавленным названием школы. Вот **готовый рабочий вариант**:
+
+```html
+<!-- Продолжение предыдущего скрипта -->
 document.getElementById('saveBtn').addEventListener('click',()=>{saveAll();alert('Сохранено');});
 document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm('Очистить всё расписание?')){allClasses.forEach(cls=>{["Пн","Вт","Ср","Чт","Пт"].forEach(day=>{scheduleData[cls][day].forEach(lesson=>{lesson.subject='';lesson.room='';});});}); document.querySelectorAll('select,input').forEach(el=>el.value=''); saveAll();}});
 document.getElementById('autoScrollBtn').addEventListener('click',()=>{autoScroll=!autoScroll; alert('Автопрокрутка '+(autoScroll?'включена':'выключена'));});
@@ -146,10 +150,6 @@ document.getElementById('createAdminBtn').addEventListener('click',()=>{const na
 document.getElementById('createSchoolBtn').addEventListener('click',()=>{const num=prompt('Номер школы:'); if(!num)return; const pass=prompt('Пароль:'); if(!pass)return; users["school_"+num]={password:pass,role:'school',displayName:'Школа №'+num,schoolNumber:num}; localStorage.setItem(LS_USERS,JSON.stringify(users)); alert('Создано');});
 if(currentUser){document.getElementById('loginPopup').style.display='none'; showMainUIAfterLogin();}
 </script>
-  
 </body>
 </html>
-
-
-
 
