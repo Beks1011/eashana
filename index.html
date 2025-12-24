@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Расписание 1-11 классы</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;overflow:hidden}
+.header{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;position:relative}
+h1{font-size:4rem;color:#1e3a8a;padding:10px 30px;border-radius:12px;margin:0;background:#fff}
+.arrow-menu{cursor:pointer;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:2px 2px 6px rgba(0,0,0,.2);position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:1002}
+.menu-items{position:absolute;top:60px;left:10px;background:#fff;padding:10px;border-radius:8px;box-shadow:2px 2px 10px rgba(0,0,0,.3);z-index:1000;display:none;width:260px}
+.menu-items button{display:block;width:100%;margin-bottom:6px;padding:8px;border-radius:6px;border:none;background:#111;color:#fff;cursor:pointer}
+#authInfo{padding:6px 4px;border-radius:6px;margin-bottom:6px;color:#111;background:transparent}
+.time-container{position:fixed;top:10px;right:10px;z-index:1000;background:rgba(255,255,255,.95);padding:6px 10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.2);text-align:center;font-weight:700}
+#clock{font-size:1.1rem}
+#birthdayWidget{position:fixed;top:10px;left:60px;min-width:220px;height:80px;background:#fff;border-radius:12px;box-shadow:0 0 12px rgba(0,0,0,.25);padding:6px;z-index:1003;display:none;align-items:center;gap:10px}
+#birthdayWidget img{width:70px;height:70px;object-fit:cover;border-radius:10px}
+.birthday-info{display:flex;flex-direction:column;font-size:13px;font-weight:500}
+.schedule-wrapper{width:100%;overflow:hidden;margin-top:12px;height:calc(100vh - 120px);position:relative;display:none}
+.schedule-container{display:flex;gap:12px;padding:12px;height:100%;transition:transform .45s cubic-bezier(.2,.9,.2,1)}
+.schedule-card{background:rgba(255,255,255,.98);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08);width:48%;min-width:48%;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+.schedule-card h3{text-align:center;margin:0 0 6px 0;font-size:1.2rem}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:0.85rem}
+th,td{border:1px solid #ccc;text-align:center;vertical-align:middle;padding:4px}
+th{background:#1e3a8a;color:#fff}
+td select, td input{width:100%;padding:6px;font-size:0.8rem;border-radius:4px;border:1px solid #ccc;box-sizing:border-box}
+.arrow-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.95);padding:10px;border-radius:50%;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.15);font-size:1.5rem;z-index:1001}
+.arrow-left{left:8px}
+.arrow-right{right:8px}
+.popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:18px;border-radius:12px;box-shadow:0 0 12px rgba(0,0,0,.3);z-index:1004;width:360px;max-width:92%}
+.popup input, .popup button, .popup select, .popup textarea{margin:6px 0;padding:8px}
+.popup input, .popup select, .popup textarea{background:#fff;color:#000;border:1px solid #bdbdbd;border-radius:6px;box-sizing:border-box;font-size:14px;width:100%}
+.popup input[type="number"], .popup input[type="date"], .popup input[type="file"]{color:#000;background:#fff;border:1px solid #bdbdbd;border-radius:6px;padding:8px}
+.popup input::placeholder, .popup textarea::placeholder{color:#666;opacity:1}
+.btn{padding:8px 12px;border-radius:8px;border:none;background:#111;color:#fff;cursor:pointer}
+.btn.gray{background:#111;color:#fff}
+.center{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.sep{height:8px;border:none}
+.hidden-prelogin{display:none}
+label.small{font-size:0.85rem;color:#333}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="arrow-menu" id="menuArrow" title="Меню">☰</div>
+  <h1>Расписание 1-11 классы</h1>
+  <div class="menu-items" id="menuItems" aria-hidden="true">
+    <div id="authInfo" style="display:none"></div>
+    <button id="saveBtn" class="hidden-prelogin btn">Сохранить</button>
+    <button id="resetBtn" class="hidden-prelogin btn gray">Очистить</button>
+    <button id="birthdayBtn" class="hidden-prelogin btn">День рождения</button>
+    <button id="autoScrollBtn" class="hidden-prelogin btn gray">Автопрокрутка</button>
+    <button id="fullscreenBtn" class="hidden-prelogin btn gray">Расширить/Назад</button>
+    <button id="addClassBtn" class="hidden-prelogin btn">Добавить класс</button>
+    <button id="selectClassesBtn" class="hidden-prelogin btn gray">Выбрать классы</button>
+    <hr class="sep">
+    <button id="createAdminBtn" class="hidden-prelogin btn gray" style="display:none">Создать админ-акк</button>
+    <button id="createSchoolBtn" class="hidden-prelogin btn gray" style="display:none">Создать акк школы</button>
+    <button id="logoutBtn" class="hidden-prelogin btn gray" style="display:none">Выйти</button>
+  </div>
+</div>
+
+<div class="time-container" id="timeContainer">
+  <span id="clock">00:00:00</span><br><span id="dateText"></span>
+</div>
+
+<div id="birthdayWidget" role="region" aria-label="Виджет дня рождения" style="display:none">
+  <img id="birthdayPhoto" src="" alt="Фото">
+  <div class="birthday-info">
+    <div id="birthdayName"></div>
+    <div id="birthdayDate"></div>
+    <div id="birthdayCongrats">🎉 Туған күніңмен! 🎉</div>
+  </div>
+  <button id="deleteBirthday" class="btn gray" style="height:32px;align-self:flex-start">Удалить</button>
+</div>
+
+<div class="schedule-wrapper" id="scheduleWrapper" role="main" style="display:none">
+  <div class="arrow-nav arrow-left" id="prevBtn" aria-label="Предыдущая страница">◀</div>
+  <div class="arrow-nav arrow-right" id="nextBtn" aria-label="Следующая страница">▶</div>
+  <div class="schedule-container" id="scheduleContainer" aria-live="polite"></div>
+</div>
+
+<div class="popup" id="loginPopup" role="dialog" aria-modal="true" style="display:block">
+  <h3>Вход</h3>
+  <input id="loginUsername" placeholder="Имя администратора или номер школы (например, 47)" />
+  <input id="loginPassword" type="password" placeholder="Пароль" />
+  <div class="center">
+    <button id="loginBtn" class="btn">Войти</button>
+  </div>
+  <p style="font-size:13px;color:#666;margin-top:8px">Админ — полный логин. Для школы вводите только номер.</p>
+</div>
+
+<script>
+const LS_SCHEDULE = "scheduleData_v1";
+const LS_VISIBLE = "visibleClasses_v1";
+const LS_BDAY = "birthdayData_v1";
+const LS_USERS = "users_v1";
+const LS_CURRENT = "current_user_v1";
+
+const subjects = ["", "Математика","Орыс тілі","Қазақ тілі","Физика","Химия","Биология","Тарих","География","Дене шынықтыру","Қолөнер","Музыка","Информатика","Ағылшын тілі","Қоғамтану"];
+const letters = ["А","Б","В"];
+let allClasses=[], scheduleData={}, visibleClasses=[], pageIndex=0, autoScroll=true;
+
+try { const saved = localStorage.getItem(LS_SCHEDULE); if(saved) scheduleData = JSON.parse(saved); } catch(e){ scheduleData = {}; }
+try { const savedV = localStorage.getItem(LS_VISIBLE); if(savedV) visibleClasses = JSON.parse(savedV); } catch(e){ visibleClasses = []; }
+
+for(let i=1;i<=11;i++){letters.forEach(l=>{const cls=`${i}${l}`;allClasses.push(cls);if(!scheduleData[cls]){scheduleData[cls]={"Пн":[],"Вт":[],"Ср":[],"Чт":[],"Пт":[]};for(const d in scheduleData[cls]) for(let k=0;k<8;k++) scheduleData[cls][d].push({subject:"",room:""});}})}
+if(!visibleClasses || visibleClasses.length===0) visibleClasses=[...allClasses];
+
+let users={};
+try{users=JSON.parse(localStorage.getItem(LS_USERS)||"{}");}catch(e){users={}}
+if(Object.keys(users).length===0){users["Бекарыс Мадениетов Абилкасымович"]={password:"12345678910",role:"admin",displayName:"Бекарыс Мадениетов Абилкасымович"}; users["school_47"]={password:"abc",role:"school",displayName:"Школа №47",schoolNumber:"47"}; localStorage.setItem(LS_USERS,JSON.stringify(users));}
+
+let currentUser=null; try{currentUser=JSON.parse(localStorage.getItem(LS_CURRENT)||"null");}catch(e){currentUser=null;}
+
+function saveAll(){
+  if(!currentUser) return;
+  const userKey=currentUser.username;
+  try{
+    const userData={schedule:scheduleData,visible:visibleClasses};
+    localStorage.setItem("user_"+userKey,JSON.stringify(userData));
+    localStorage.setItem(LS_SCHEDULE,JSON.stringify(scheduleData));
+    localStorage.setItem(LS_VISIBLE,JSON.stringify(visibleClasses));
+  }catch(e){console.warn("Save failed",e);}
+}
+function showBirthdayWidget(name,date,photo){document.getElementById('birthdayPhoto').src=photo;document.getElementById('birthdayName').textContent=name;document.getElementById('birthdayDate').textContent=date;document.getElementById('birthdayWidget').style.display='flex';}
+function clearBirthdayWidget(){document.getElementById('birthdayWidget').style.display='none';}
+
+function updateMenuVisibility(){
+  const isLogged=!!currentUser;
+  document.querySelectorAll('.hidden-prelogin').forEach(el=>el.style.display=isLogged?'block':'none');
+  const createAdminBtn=document.getElementById('createAdminBtn');
+  const createSchoolBtn=document.getElementById('createSchoolBtn');
+  const logoutBtn=document.getElementById('logoutBtn');
+  const authInfo=document.getElementById('authInfo');
+  if(isLogged){
+    authInfo.style.display='block'; authInfo.textContent=`Вошёл: ${currentUser.displayName||currentUser.username}`;
+    logoutBtn.style.display='block';
+    if(currentUser.role==='admin'){createAdminBtn.style.display='block'; createSchoolBtn.style.display='block';} else {createAdminBtn.style.display='none'; createSchoolBtn.style.display='none';}
+  } else {authInfo.style.display='none'; authInfo.textContent=''; logoutBtn.style.display='none'; createAdminBtn.style.display='none'; createSchoolBtn.style.display='none';}
+}
+
+function showMainUIAfterLogin(){
+  document.body.style.background="linear-gradient(135deg,#e0f2fe,#c7d2fe)";
+  document.getElementById('scheduleWrapper').style.display='block';
+  try{
+    const b=localStorage.getItem(LS_BDAY);
+    if(b){const o=JSON.parse(b); if(o && o.name) showBirthdayWidget(o.name,o.date,o.photo);}
+  }catch(e){}
+  // загрузка расписания для конкретного пользователя
+  try{
+    if(currentUser){
+      const userKey=currentUser.username;
+      const userData=JSON.parse(localStorage.getItem("user_"+userKey)||"{}");
+      if(userData.schedule)scheduleData=userData.schedule;
+      if(userData.visible)visibleClasses=userData.visible;
+    }
+  }catch(e){}
+  updateMenuVisibility();
+  refreshVisibility();
+  updateSchedulePosition();
+}
+
+function updateClock(){const now=new Date();const h=String(now.getHours()).padStart(2,'0');const m=String(now.getMinutes()).padStart(2,'0');const s=String(now.getSeconds()).padStart(2,'0');document.getElementById('clock').textContent=`${h}:${m}:${s}`;document.getElementById('dateText').textContent=`${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()}`;}
+setInterval(updateClock,1000);updateClock();
+
+const container=document.getElementById('scheduleContainer');
+function createCard(cls){
+  const card=document.createElement('div'); card.className='schedule-card'; card.dataset.cls=cls;
+  let html=`<h3>${cls}</h3><table><thead><tr><th>#</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th></tr></thead><tbody>`;
+  for(let r=0;r<8;r++){html+=`<tr><td>${r+1}</td>`;["Пн","Вт","Ср","Чт","Пт"].forEach(()=>{html+=`<td><select></select><input type="text" placeholder="кабинет"></td>`;});html+=`</tr>`;}
+  html+=`</tbody></table>`; card.innerHTML=html; container.appendChild(card);
+  ["Пн","Вт","Ср","Чт","Пт"].forEach((day,i)=>{scheduleData[cls][day].forEach((lesson,rowIndex)=>{const td=card.querySelectorAll('tbody tr')[rowIndex].children[i+1];const select=td.querySelector('select');const input=td.querySelector('input');subjects.forEach(s=>{const opt=document.createElement('option');opt.value=s;opt.textContent=s||'—';select.appendChild(opt);}); select.value=lesson.subject||''; input.value=lesson.room||''; select.addEventListener('change',()=>{lesson.subject=select.value; saveAll();}); input.addEventListener('input',()=>{lesson.room=input.value; saveAll();});});});
+}
+allClasses.forEach(createCard);
+
+function getVisibleNodes(){return Array.from(container.children).filter(n=>visibleClasses.includes(n.dataset.cls));}
+function updateSchedulePosition(){const visibleNodes=getVisibleNodes(); if(visibleNodes.length===0){container.style.transform=`translateX(0px)`; pageIndex=0; return;} const gap=12; const card=visibleNodes[0]; const step=card.offsetWidth+gap; const pages=Math.ceil(visibleNodes.length/2); if(pageIndex>=pages) pageIndex=Math.max(pages-1,0); if(pageIndex<0) pageIndex=0; const firstIndex=pageIndex*2; const offset=firstIndex*step; container.style.transform=`translateX(${-offset}px)`;}
+document.getElementById('nextBtn').addEventListener('click',()=>{const visibleNodes=getVisibleNodes(); const pages=Math.max(Math.ceil(visibleNodes.length/2),1); pageIndex=(pageIndex+1)%pages; updateSchedulePosition();});
+document.getElementById('prevBtn').addEventListener('click',()=>{const visibleNodes=getVisibleNodes(); const pages=Math.max(Math.ceil(visibleNodes.length/2),1); pageIndex=(pageIndex-1+pages)%pages; updateSchedulePosition();});
+setInterval(()=>{if(autoScroll&&getVisibleNodes().length>2)document.getElementById('nextBtn').click();},5000);
+
+function refreshVisibility(){document.querySelectorAll('.schedule-card').forEach(card=>{card.style.display=visibleClasses.includes(card.dataset.cls)?'flex':'none';});updateSchedulePosition();}
+
+const menuArrow=document.getElementById('menuArrow'); const menuItems=document.getElementById('menuItems');
+menuArrow.addEventListener('click',()=>{if(!currentUser){document.getElementById('loginPopup').style.display='block';return;} menuItems.style.display=menuItems.style.display==='block'?'none':'block';});
+document.getElementById('saveBtn').addEventListener('click',()=>{saveAll();alert('Сохранено');});
+document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm('Очистить всё расписание?')){allClasses.forEach(cls=>{["Пн","Вт","Ср","Чт","Пт"].forEach(day=>{scheduleData[cls][day].forEach(lesson=>{lesson.subject='';lesson.room='';});});}); document.querySelectorAll('select,input').forEach(el=>el.value=''); saveAll();}});
+document.getElementById('autoScrollBtn').addEventListener('click',()=>{autoScroll=!autoScroll; alert('Автопрокрутка '+(autoScroll?'включена':'выключена'));});
+document.getElementById('fullscreenBtn').addEventListener('click',()=>{document.body.requestFullscreen?.();});
+document.getElementById('logoutBtn').addEventListener('click',()=>{currentUser=null; localStorage.removeItem(LS_CURRENT); location.reload();});
+
+document.getElementById('loginBtn').addEventListener('click',()=>{
+  const u=document.getElementById('loginUsername').value.trim();
+  const p=document.getElementById('loginPassword').value.trim();
+  if(!u || !p){alert('Введите данные'); return;}
+  const key=users[u] ? u : "school_"+u;
+  const user=users[key];
+  if(!user || user.password!==p){alert('Неверные данные'); return;}
+  currentUser={username:key,...user};
+  localStorage.setItem(LS_CURRENT,JSON.stringify(currentUser));
+  document.getElementById('loginPopup').style.display='none';
+  showMainUIAfterLogin();
+});
+
+// Добавление/выбор классов
+document.getElementById('addClassBtn').addEventListener('click',()=>{
+  const cls=prompt('Введите новый класс (например 12A)'); if(!cls) return;
+  if(allClasses.includes(cls)){alert('Класс уже есть'); return;}
+  allClasses.push(cls); scheduleData[cls]={"Пн":[],"Вт":[],"Ср":[],"Чт":[],"Пт":[]}; ["Пн","Вт","Ср","Чт","Пт"].forEach(day=>{for(let k=0;k<8;k++)scheduleData[cls][day].push({subject:"",room:""});});
+  createCard(cls); saveAll();
+});
+document.getElementById('selectClassesBtn').addEventListener('click',()=>{
+  const selected=prompt('Введите классы через запятую, которые хотите видеть (например 1А,2Б)'); if(!selected) return;
+  visibleClasses=selected.split(',').map(s=>s.trim()).filter(s=>allClasses.includes(s)); refreshVisibility(); saveAll();
+});
+
+// День рождения
+document.getElementById('birthdayBtn').addEventListener('click',()=>{
+  const name=prompt('Имя:'); if(!name)return;
+  const date=prompt('Дата (дд.мм):'); if(!date)return;
+  const photo=prompt('Ссылка на фото:'); if(!photo)return;
+  const bday={name,date,photo};
+  localStorage.setItem(LS_BDAY,JSON.stringify(bday));
+  showBirthdayWidget(name,date,photo);
+});
+document.getElementById('deleteBirthday').addEventListener('click',()=>{clearBirthdayWidget(); localStorage.removeItem(LS_BDAY);});
+
+// Админ создание
+document.getElementById('createAdminBtn').addEventListener('click',()=>{
+  const name=prompt('Имя нового администратора:'); if(!name)return;
+  const pass=prompt('Пароль:'); if(!pass)return;
+  users[name]={password:pass,role:'admin',displayName:name}; localStorage.setItem(LS_USERS,JSON.stringify(users)); alert('Создано');
+});
+document.getElementById('createSchoolBtn').addEventListener('click',()=>{
+  const num=prompt('Номер школы:'); if(!num)return;
+  const pass=prompt('Пароль:'); if(!pass)return;
+  users["school_"+num]={password:pass,role:'school',displayName:'Школа №'+num,schoolNumber:num}; localStorage.setItem(LS_USERS,JSON.stringify(users)); alert('Создано');
+});
+
+// сразу после загрузки, если есть сохранённый пользователь
+if(currentUser){document.getElementById('loginPopup').style.display='none'; showMainUIAfterLogin();}
+</script>
+</body>
+</html>
